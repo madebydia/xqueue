@@ -3,7 +3,8 @@
 XQueue Post Engine — checks the queue and posts to X.
 Run via cron every 15 minutes.
 
-Reads credentials from macOS Keychain (account: meimakes, services: x-consumer-key, etc.)
+Reads credentials from environment variables (X_CONSUMER_KEY, X_CONSUMER_SECRET, X_ACCESS_TOKEN,
+X_ACCESS_TOKEN_SECRET). Optional macOS Keychain fallback if XQUEUE_KEYCHAIN_ACCOUNT is set.
 Fallback: env vars X_CONSUMER_KEY, X_CONSUMER_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET
 """
 
@@ -42,8 +43,15 @@ def load_config(queue_dir: Path) -> dict:
 
 def log_action(config: dict, queue_dir: Path, message: str):
     log_path = Path(config.get("logFile", "xqueue/posted.log"))
-    if not log_path.is_absolute():
-        log_path = queue_dir.parent / log_path
+    # Security: reject absolute paths to prevent arbitrary file writes
+    if log_path.is_absolute():
+        log_path = Path("xqueue/posted.log")
+    log_path = queue_dir.parent / log_path
+    # Ensure log stays within the queue parent directory
+    try:
+        log_path.resolve().relative_to(queue_dir.parent.resolve())
+    except ValueError:
+        log_path = queue_dir.parent / "xqueue" / "posted.log"
     log_path.parent.mkdir(parents=True, exist_ok=True)
     ts = datetime.now().strftime("%Y-%m-%d %H:%M")
     with open(log_path, "a") as f:
@@ -54,19 +62,25 @@ def log_action(config: dict, queue_dir: Path, message: str):
 # OAuth 1.0a
 # ---------------------------------------------------------------------------
 
-def get_credential(service: str, env_var: str, account: str = "meimakes") -> str:
-    """Get credential from macOS Keychain first, fall back to env var."""
-    import subprocess
-    try:
-        result = subprocess.run(
-            ["security", "find-generic-password", "-a", account, "-s", service, "-w"],
-            capture_output=True, text=True, timeout=5
-        )
-        if result.returncode == 0 and result.stdout.strip():
-            return result.stdout.strip()
-    except Exception:
-        pass
-    return os.environ.get(env_var, "")
+def get_credential(service: str, env_var: str) -> str:
+    """Get credential from env var first, fall back to macOS Keychain if XQUEUE_KEYCHAIN_ACCOUNT is set."""
+    val = os.environ.get(env_var, "")
+    if val:
+        return val
+    # Optional macOS Keychain fallback — only if user explicitly configures it
+    account = os.environ.get("XQUEUE_KEYCHAIN_ACCOUNT", "")
+    if account:
+        import subprocess
+        try:
+            result = subprocess.run(
+                ["security", "find-generic-password", "-a", account, "-s", service, "-w"],
+                capture_output=True, text=True, timeout=5
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                return result.stdout.strip()
+        except Exception:
+            pass
+    return ""
 
 
 def oauth_request(method: str, url: str, body: dict = None, params: dict = None) -> dict:

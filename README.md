@@ -77,7 +77,10 @@ Designed to run on a 15-minute cron cycle. Each tick:
 ## Requirements
 
 - Python 3
-- X API credentials (OAuth 1.0a for posting)
+- X API credentials via environment variables:
+  - `X_CONSUMER_KEY`, `X_CONSUMER_SECRET` (app credentials)
+  - `X_ACCESS_TOKEN`, `X_ACCESS_TOKEN_SECRET` (user credentials)
+  - Optional: set `XQUEUE_KEYCHAIN_ACCOUNT` to use macOS Keychain as fallback
 - A cron runner (OpenClaw cron, system cron, etc.)
 
 ## License
