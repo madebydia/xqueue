@@ -1,7 +1,7 @@
 ---
 name: xqueue
 description: File-based X/Twitter post scheduler. Drop tweets into day/time folders, they post automatically. No frontend, no app — your file system is the UI.
-metadata: {"openclaw":{"requires":{"env":["X_CONSUMER_KEY","X_CONSUMER_SECRET","X_ACCESS_TOKEN","X_ACCESS_TOKEN_SECRET"],"bins":["python3"]},"permissions":{"filesystem":"read/write within xqueue/ directory","network":"api.twitter.com, upload.twitter.com","keychain":"optional macOS Keychain if XQUEUE_KEYCHAIN_ACCOUNT is set"},"homepage":"https://github.com/madebydia/xqueue","author":"Diana Park (@madebydia)"}}
+metadata: {"openclaw":{"requires":{"env":["X_CONSUMER_KEY","X_CONSUMER_SECRET","X_ACCESS_TOKEN","X_ACCESS_TOKEN_SECRET"],"bins":["python3"]},"permissions":{"filesystem":"read/write within xqueue/ directory","network":"api.twitter.com, upload.twitter.com","keychain":"optional macOS Keychain if XQUEUE_KEYCHAIN_ACCOUNT is set"},"homepage":"https://github.com/madebydia/xqueue","author":"Diana (@madebydia)"}}
 ---
 
 # XQueue
